@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-caveat: 'Caveat', cursive;
+  --font-nunito: 'Nunito', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-special-elite: 'Special Elite', cursive;
+
+  --cream: #FFF5E4;
+  --pink: #F8C8DC;
+  --gold: #C9A84C;
+  --gold-light: #E8D5A3;
+  --ring-shadow: #8B6914;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-nunito);
+  background-color: var(--cream);
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
