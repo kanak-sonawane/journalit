@@ -1,5 +1,4 @@
 export type PageType = "blank" | "ruled" | "dotted" | "grid";
-
 export type ElementType = "text" | "image";
 
 export interface BaseElement {
