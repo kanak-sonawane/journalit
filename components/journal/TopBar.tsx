@@ -4,12 +4,15 @@ import { useJournalStore } from "@/store/journalStore";
 import { FONTS, FONT_SIZES, PAGE_TYPES } from "@/lib/constants";
 import { TextElement } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function TopBar() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
+
   const {
     spreads, currentSpreadIndex,
     selectedElementId, selectedElementSide,
@@ -45,9 +48,14 @@ export default function TopBar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/auth");
+  };
+
   return (
     <div
-      className="flex items-center gap-3 px-4 py-2 rounded-2xl flex-wrap w-full max-w-5xl"
+      className="flex items-center gap-3 px-4 py-2 rounded-2xl flex-wrap w-full max-w-6xl"
       style={{
         background: "white",
         boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
@@ -82,7 +90,9 @@ export default function TopBar() {
               fontFamily: "var(--font-nunito)",
               background: spread.left.pageType === pt.value ? "#FFF5E4" : "transparent",
               color: spread.left.pageType === pt.value ? "#C9603C" : "#aaa",
-              border: spread.left.pageType === pt.value ? "1px solid #f0c8a0" : "1px solid transparent",
+              border: spread.left.pageType === pt.value
+                ? "1px solid #f0c8a0"
+                : "1px solid transparent",
             }}
           >
             {pt.label}
@@ -91,9 +101,16 @@ export default function TopBar() {
         {/* Left page color */}
         <div className="relative ml-1" ref={leftColorRef}>
           <button
-            onClick={() => { setShowLeftColor(!showLeftColor); setShowRightColor(false); setShowTextColor(false); }}
+            onClick={() => {
+              setShowLeftColor(!showLeftColor);
+              setShowRightColor(false);
+              setShowTextColor(false);
+            }}
             className="w-5 h-5 rounded-full"
-            style={{ background: spread.left.bgColor, boxShadow: "0 0 0 2px #ddd" }}
+            style={{
+              background: spread.left.bgColor,
+              boxShadow: "0 0 0 2px #ddd",
+            }}
           />
           {showLeftColor && (
             <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
@@ -125,7 +142,9 @@ export default function TopBar() {
               fontFamily: "var(--font-nunito)",
               background: spread.right.pageType === pt.value ? "#e8f0ff" : "transparent",
               color: spread.right.pageType === pt.value ? "#4a80c9" : "#aaa",
-              border: spread.right.pageType === pt.value ? "1px solid #a0b8f0" : "1px solid transparent",
+              border: spread.right.pageType === pt.value
+                ? "1px solid #a0b8f0"
+                : "1px solid transparent",
             }}
           >
             {pt.label}
@@ -134,9 +153,16 @@ export default function TopBar() {
         {/* Right page color */}
         <div className="relative ml-1" ref={rightColorRef}>
           <button
-            onClick={() => { setShowRightColor(!showRightColor); setShowLeftColor(false); setShowTextColor(false); }}
+            onClick={() => {
+              setShowRightColor(!showRightColor);
+              setShowLeftColor(false);
+              setShowTextColor(false);
+            }}
             className="w-5 h-5 rounded-full"
-            style={{ background: spread.right.bgColor, boxShadow: "0 0 0 2px #ddd" }}
+            style={{
+              background: spread.right.bgColor,
+              boxShadow: "0 0 0 2px #ddd",
+            }}
           />
           {showRightColor && (
             <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
@@ -164,11 +190,15 @@ export default function TopBar() {
             }}
             value={selectedEl.fontFamily}
             onChange={(e) =>
-              updateElement(selectedElementSide, selectedEl.id, { fontFamily: e.target.value })
+              updateElement(selectedElementSide, selectedEl.id, {
+                fontFamily: e.target.value,
+              })
             }
           >
             {FONTS.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
             ))}
           </select>
 
@@ -183,11 +213,15 @@ export default function TopBar() {
             }}
             value={selectedEl.fontSize}
             onChange={(e) =>
-              updateElement(selectedElementSide, selectedEl.id, { fontSize: Number(e.target.value) })
+              updateElement(selectedElementSide, selectedEl.id, {
+                fontSize: Number(e.target.value),
+              })
             }
           >
             {FONT_SIZES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
 
@@ -196,10 +230,14 @@ export default function TopBar() {
             style={{
               background: selectedEl.bold ? "#FFF5E4" : "transparent",
               color: selectedEl.bold ? "#C9603C" : "#888",
-              border: selectedEl.bold ? "1px solid #f0c8a0" : "1px solid transparent",
+              border: selectedEl.bold
+                ? "1px solid #f0c8a0"
+                : "1px solid transparent",
             }}
             onClick={() =>
-              updateElement(selectedElementSide, selectedEl.id, { bold: !selectedEl.bold })
+              updateElement(selectedElementSide, selectedEl.id, {
+                bold: !selectedEl.bold,
+              })
             }
           >
             B
@@ -210,29 +248,50 @@ export default function TopBar() {
             style={{
               background: selectedEl.italic ? "#FFF5E4" : "transparent",
               color: selectedEl.italic ? "#C9603C" : "#888",
-              border: selectedEl.italic ? "1px solid #f0c8a0" : "1px solid transparent",
+              border: selectedEl.italic
+                ? "1px solid #f0c8a0"
+                : "1px solid transparent",
             }}
             onClick={() =>
-              updateElement(selectedElementSide, selectedEl.id, { italic: !selectedEl.italic })
+              updateElement(selectedElementSide, selectedEl.id, {
+                italic: !selectedEl.italic,
+              })
             }
           >
             I
           </button>
 
           {/* Text color */}
-          <div className="relative flex items-center gap-1" ref={textColorRef}>
-            <span className="text-xs font-bold opacity-40" style={{ fontFamily: "var(--font-nunito)" }}>A</span>
+          <div
+            className="relative flex items-center gap-1"
+            ref={textColorRef}
+          >
+            <span
+              className="text-xs font-bold opacity-40"
+              style={{ fontFamily: "var(--font-nunito)" }}
+            >
+              A
+            </span>
             <button
-              onClick={() => { setShowTextColor(!showTextColor); setShowLeftColor(false); setShowRightColor(false); }}
+              onClick={() => {
+                setShowTextColor(!showTextColor);
+                setShowLeftColor(false);
+                setShowRightColor(false);
+              }}
               className="w-5 h-5 rounded-full"
-              style={{ background: selectedEl.color, boxShadow: "0 0 0 2px #ddd" }}
+              style={{
+                background: selectedEl.color,
+                boxShadow: "0 0 0 2px #ddd",
+              }}
             />
             {showTextColor && (
               <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
                 <HexColorPicker
                   color={selectedEl.color}
                   onChange={(c) =>
-                    updateElement(selectedElementSide, selectedEl.id, { color: c })
+                    updateElement(selectedElementSide, selectedEl.id, {
+                      color: c,
+                    })
                   }
                 />
               </div>
@@ -240,6 +299,54 @@ export default function TopBar() {
           </div>
         </>
       )}
+
+      {/* ── User info + logout — pushed to right ── */}
+      <div className="ml-auto flex items-center gap-3">
+        {user && (
+          <>
+            {/* Avatar circle with initial */}
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{
+                background: "#F8C8DC",
+                color: "#8a2040",
+                fontFamily: "var(--font-nunito)",
+                flexShrink: 0,
+              }}
+            >
+              {user.email?.[0].toUpperCase()}
+            </div>
+
+            {/* Email — hidden on small screens */}
+            <span
+              className="text-xs opacity-40 hidden md:block truncate max-w-[140px]"
+              style={{
+                fontFamily: "var(--font-nunito)",
+                color: "#5a1025",
+              }}
+            >
+              {user.email}
+            </span>
+
+            <div className="w-px h-4 bg-gray-100" />
+
+            {/* Logout */}
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg transition-all"
+              style={{
+                fontFamily: "var(--font-nunito)",
+                background: "#f5f5f5",
+                color: "#888",
+                border: "1px solid #eee",
+              }}
+            >
+              <LogOut size={12} />
+              Log out
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -77,9 +77,10 @@ export default function HomePage() {
           {/* Features list */}
           <ul className="flex flex-col gap-2">
             {[
-              "Upload & arrange images freely",
-              "Multiple fonts & text colours",
-              "Stickers & decorations",
+              "📄 Ruled, dotted, grid & blank pages",
+              "🖼️ Upload & arrange images freely",
+              "✍️ Multiple fonts & text colours",
+              "🌸 Stickers & decorations",
             ].map((f, i) => (
               <motion.li
                 key={i}
@@ -94,20 +95,20 @@ export default function HomePage() {
             ))}
           </ul>
 
-          {/* Flat button */}
+          {/* Button — goes to /auth, middleware handles redirect if already logged in */}
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => router.push("/journal")}
+            onClick={() => router.push("/auth")}
             className="mt-2 px-10 py-4 rounded-2xl text-white text-base tracking-wide"
             style={{
               fontFamily: "var(--font-nunito)",
               fontWeight: 700,
-              background: "#fba0ed",
-              boxShadow: "4px 4px 0px #c330c1",
+              background: "#C9603C",
+              boxShadow: "4px 4px 0px #8B3A20",
             }}
           >
             Open Journal →
@@ -118,7 +119,7 @@ export default function HomePage() {
             className="text-xs opacity-40"
             style={{ fontFamily: "var(--font-nunito)", color: "#8a2040" }}
           >
-            no account needed · saves locally ✦
+            free to use · your journal saves forever ✦
           </p>
         </motion.div>
       </div>
