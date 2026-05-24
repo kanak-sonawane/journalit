@@ -3,7 +3,6 @@ import { Spread, Page, JournalElement, ActiveTool, PageType } from "@/lib/types"
 import { DEFAULT_PAGE_COLOR } from "@/lib/constants";
 import { nanoid } from "nanoid";
 
-// Global image storage — never goes to localStorage
 export const imageStore: Record<string, string> = {};
 
 const createPage = (): Page => ({
@@ -19,13 +18,25 @@ const createSpread = (): Spread => ({
   right: createPage(),
 });
 
+// Helper — updates one page inside a spread safely
+function updatePage(
+  spread: Spread,
+  side: "left" | "right",
+  updater: (page: Page) => Page
+): Spread {
+  if (side === "left") {
+    return { ...spread, left: updater(spread.left) };
+  } else {
+    return { ...spread, right: updater(spread.right) };
+  }
+}
+
 interface JournalState {
   spreads: Spread[];
   currentSpreadIndex: number;
   activeTool: ActiveTool;
   selectedElementId: string | null;
   selectedElementSide: "left" | "right" | null;
-  activePageSide: "left" | "right";
 
   addSpread: () => void;
   goToSpread: (index: number) => void;
@@ -36,7 +47,6 @@ interface JournalState {
   deleteElement: (side: "left" | "right", id: string) => void;
   setActiveTool: (tool: ActiveTool) => void;
   setSelectedElement: (id: string | null, side?: "left" | "right") => void;
-  setActivePageSide: (side: "left" | "right") => void;
 }
 
 export const useJournalStore = create<JournalState>()((set) => ({
@@ -45,59 +55,72 @@ export const useJournalStore = create<JournalState>()((set) => ({
   activeTool: "select",
   selectedElementId: null,
   selectedElementSide: null,
-  activePageSide: "left",
 
   addSpread: () =>
     set((s) => ({ spreads: [...s.spreads, createSpread()] })),
 
   goToSpread: (index) =>
-    set({ currentSpreadIndex: index, selectedElementId: null }),
+    set({
+      currentSpreadIndex: index,
+      selectedElementId: null,
+      selectedElementSide: null,
+    }),
 
   setPageType: (side, pageType) =>
     set((s) => ({
       spreads: s.spreads.map((sp, i) =>
-        i !== s.currentSpreadIndex ? sp
-          : { ...sp, [side]: { ...sp[side], pageType } }
+        i !== s.currentSpreadIndex
+          ? sp
+          : updatePage(sp, side, (p) => ({ ...p, pageType }))
       ),
     })),
 
   setPageColor: (side, color) =>
     set((s) => ({
       spreads: s.spreads.map((sp, i) =>
-        i !== s.currentSpreadIndex ? sp
-          : { ...sp, [side]: { ...sp[side], bgColor: color } }
+        i !== s.currentSpreadIndex
+          ? sp
+          : updatePage(sp, side, (p) => ({ ...p, bgColor: color }))
       ),
     })),
 
   addElement: (side, element) =>
     set((s) => ({
       spreads: s.spreads.map((sp, i) =>
-        i !== s.currentSpreadIndex ? sp
-          : { ...sp, [side]: { ...sp[side], elements: [...sp[side].elements, element] } }
+        i !== s.currentSpreadIndex
+          ? sp
+          : updatePage(sp, side, (p) => ({
+              ...p,
+              elements: [...p.elements, element],
+            }))
       ),
     })),
 
   updateElement: (side, id, updates) =>
     set((s) => ({
       spreads: s.spreads.map((sp, i) =>
-        i !== s.currentSpreadIndex ? sp
-          : {
-              ...sp,
-              [side]: {
-                ...sp[side],
-                elements: sp[side].elements.map((el) =>
-                  el.id === id ? ({ ...el, ...updates } as JournalElement) : el
-                ),
-              },
-            }
+        i !== s.currentSpreadIndex
+          ? sp
+          : updatePage(sp, side, (p) => ({
+              ...p,
+              elements: p.elements.map((el) =>
+                el.id === id
+                  ? ({ ...el, ...updates } as JournalElement)
+                  : el
+              ),
+            }))
       ),
     })),
 
   deleteElement: (side, id) =>
     set((s) => ({
       spreads: s.spreads.map((sp, i) =>
-        i !== s.currentSpreadIndex ? sp
-          : { ...sp, [side]: { ...sp[side], elements: sp[side].elements.filter((el) => el.id !== id) } }
+        i !== s.currentSpreadIndex
+          ? sp
+          : updatePage(sp, side, (p) => ({
+              ...p,
+              elements: p.elements.filter((el) => el.id !== id),
+            }))
       ),
     })),
 
@@ -105,6 +128,4 @@ export const useJournalStore = create<JournalState>()((set) => ({
 
   setSelectedElement: (id, side) =>
     set({ selectedElementId: id, selectedElementSide: side ?? null }),
-
-  setActivePageSide: (side) => set({ activePageSide: side }),
 }));

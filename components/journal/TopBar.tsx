@@ -12,32 +12,34 @@ export default function TopBar() {
   const router = useRouter();
   const {
     spreads, currentSpreadIndex,
-    activePageSide, selectedElementId, selectedElementSide,
+    selectedElementId, selectedElementSide,
     updateElement, setPageType, setPageColor,
   } = useJournalStore();
 
   const spread = spreads[currentSpreadIndex];
-  const activePage = spread[activePageSide];
 
-  // find selected element
-  const selectedEl =
-    selectedElementSide
-      ? (spread[selectedElementSide].elements.find(
-          (e) => e.id === selectedElementId
-        ) as TextElement | undefined)
-      : undefined;
+  const selectedEl = selectedElementSide
+    ? (spread[selectedElementSide].elements.find(
+        (e) => e.id === selectedElementId
+      ) as TextElement | undefined)
+    : undefined;
 
   const [showTextColor, setShowTextColor] = useState(false);
-  const [showPageColor, setShowPageColor] = useState(false);
+  const [showLeftColor, setShowLeftColor] = useState(false);
+  const [showRightColor, setShowRightColor] = useState(false);
+
   const textColorRef = useRef<HTMLDivElement>(null);
-  const pageColorRef = useRef<HTMLDivElement>(null);
+  const leftColorRef = useRef<HTMLDivElement>(null);
+  const rightColorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (textColorRef.current && !textColorRef.current.contains(e.target as Node))
         setShowTextColor(false);
-      if (pageColorRef.current && !pageColorRef.current.contains(e.target as Node))
-        setShowPageColor(false);
+      if (leftColorRef.current && !leftColorRef.current.contains(e.target as Node))
+        setShowLeftColor(false);
+      if (rightColorRef.current && !rightColorRef.current.contains(e.target as Node))
+        setShowRightColor(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -63,75 +65,91 @@ export default function TopBar() {
 
       <div className="w-px h-6 bg-gray-100" />
 
-      {/* Active page indicator */}
-      <div
-        className="px-3 py-1 rounded-lg text-xs font-semibold"
-        style={{
-          background: activePageSide === "left" ? "#fff0e8" : "#e8f0ff",
-          color: activePageSide === "left" ? "#C9603C" : "#4a80c9",
-          fontFamily: "var(--font-nunito)",
-          border: `1px solid ${activePageSide === "left" ? "#f0c8a0" : "#a0b8f0"}`,
-        }}
-      >
-        {activePageSide === "left" ? "← Left page" : "Right page →"}
-      </div>
-
-      <div className="w-px h-6 bg-gray-100" />
-
-      {/* Page type — applies to activePageSide */}
+      {/* ── Left page controls ── */}
       <div className="flex items-center gap-1">
-        <span className="text-xs opacity-40 mr-1" style={{ fontFamily: "var(--font-nunito)" }}>
-          Style
+        <span
+          className="text-xs font-semibold mr-1"
+          style={{ fontFamily: "var(--font-nunito)", color: "#C9603C" }}
+        >
+          L
         </span>
         {PAGE_TYPES.map((pt) => (
           <button
             key={pt.value}
-            onClick={() => setPageType(activePageSide, pt.value)}
-            className="px-3 py-1 rounded-lg text-xs transition-all"
+            onClick={() => setPageType("left", pt.value)}
+            className="px-2 py-1 rounded-lg text-xs transition-all"
             style={{
               fontFamily: "var(--font-nunito)",
-              background: activePage.pageType === pt.value ? "#FFF5E4" : "transparent",
-              color: activePage.pageType === pt.value ? "#C9603C" : "#888",
-              border:
-                activePage.pageType === pt.value
-                  ? "1px solid #f0c8a0"
-                  : "1px solid transparent",
+              background: spread.left.pageType === pt.value ? "#FFF5E4" : "transparent",
+              color: spread.left.pageType === pt.value ? "#C9603C" : "#aaa",
+              border: spread.left.pageType === pt.value ? "1px solid #f0c8a0" : "1px solid transparent",
             }}
           >
             {pt.label}
           </button>
         ))}
+        {/* Left page color */}
+        <div className="relative ml-1" ref={leftColorRef}>
+          <button
+            onClick={() => { setShowLeftColor(!showLeftColor); setShowRightColor(false); setShowTextColor(false); }}
+            className="w-5 h-5 rounded-full"
+            style={{ background: spread.left.bgColor, boxShadow: "0 0 0 2px #ddd" }}
+          />
+          {showLeftColor && (
+            <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
+              <HexColorPicker
+                color={spread.left.bgColor}
+                onChange={(c) => setPageColor("left", c)}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="w-px h-6 bg-gray-100" />
 
-      {/* Page color */}
-      <div className="flex items-center gap-2 relative" ref={pageColorRef}>
-        <span className="text-xs opacity-40" style={{ fontFamily: "var(--font-nunito)" }}>
-          Pg
+      {/* ── Right page controls ── */}
+      <div className="flex items-center gap-1">
+        <span
+          className="text-xs font-semibold mr-1"
+          style={{ fontFamily: "var(--font-nunito)", color: "#4a80c9" }}
+        >
+          R
         </span>
-        <button
-          onClick={() => {
-            setShowPageColor(!showPageColor);
-            setShowTextColor(false);
-          }}
-          className="w-6 h-6 rounded-full"
-          style={{
-            background: activePage.bgColor,
-            boxShadow: "0 0 0 2px #ddd",
-          }}
-        />
-        {showPageColor && (
-          <div className="absolute top-10 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
-            <HexColorPicker
-              color={activePage.bgColor}
-              onChange={(c) => setPageColor(activePageSide, c)}
-            />
-          </div>
-        )}
+        {PAGE_TYPES.map((pt) => (
+          <button
+            key={pt.value}
+            onClick={() => setPageType("right", pt.value)}
+            className="px-2 py-1 rounded-lg text-xs transition-all"
+            style={{
+              fontFamily: "var(--font-nunito)",
+              background: spread.right.pageType === pt.value ? "#e8f0ff" : "transparent",
+              color: spread.right.pageType === pt.value ? "#4a80c9" : "#aaa",
+              border: spread.right.pageType === pt.value ? "1px solid #a0b8f0" : "1px solid transparent",
+            }}
+          >
+            {pt.label}
+          </button>
+        ))}
+        {/* Right page color */}
+        <div className="relative ml-1" ref={rightColorRef}>
+          <button
+            onClick={() => { setShowRightColor(!showRightColor); setShowLeftColor(false); setShowTextColor(false); }}
+            className="w-5 h-5 rounded-full"
+            style={{ background: spread.right.bgColor, boxShadow: "0 0 0 2px #ddd" }}
+          />
+          {showRightColor && (
+            <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
+              <HexColorPicker
+                color={spread.right.bgColor}
+                onChange={(c) => setPageColor("right", c)}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Text controls */}
+      {/* ── Text controls — only when text selected ── */}
       {selectedEl?.type === "text" && selectedElementSide && (
         <>
           <div className="w-px h-6 bg-gray-100" />
@@ -146,15 +164,11 @@ export default function TopBar() {
             }}
             value={selectedEl.fontFamily}
             onChange={(e) =>
-              updateElement(selectedElementSide, selectedEl.id, {
-                fontFamily: e.target.value,
-              })
+              updateElement(selectedElementSide, selectedEl.id, { fontFamily: e.target.value })
             }
           >
             {FONTS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
+              <option key={f.value} value={f.value}>{f.label}</option>
             ))}
           </select>
 
@@ -165,19 +179,15 @@ export default function TopBar() {
               background: "#f9f9f9",
               border: "1px solid #eee",
               color: "#555",
-              width: 60,
+              width: 58,
             }}
             value={selectedEl.fontSize}
             onChange={(e) =>
-              updateElement(selectedElementSide, selectedEl.id, {
-                fontSize: Number(e.target.value),
-              })
+              updateElement(selectedElementSide, selectedEl.id, { fontSize: Number(e.target.value) })
             }
           >
             {FONT_SIZES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+              <option key={s} value={s}>{s}</option>
             ))}
           </select>
 
@@ -210,23 +220,15 @@ export default function TopBar() {
           </button>
 
           {/* Text color */}
-          <div className="flex items-center gap-1 relative" ref={textColorRef}>
-            <span
-              className="text-xs font-bold opacity-40"
-              style={{ fontFamily: "var(--font-nunito)" }}
-            >
-              A
-            </span>
+          <div className="relative flex items-center gap-1" ref={textColorRef}>
+            <span className="text-xs font-bold opacity-40" style={{ fontFamily: "var(--font-nunito)" }}>A</span>
             <button
-              onClick={() => {
-                setShowTextColor(!showTextColor);
-                setShowPageColor(false);
-              }}
-              className="w-6 h-6 rounded-full"
+              onClick={() => { setShowTextColor(!showTextColor); setShowLeftColor(false); setShowRightColor(false); }}
+              className="w-5 h-5 rounded-full"
               style={{ background: selectedEl.color, boxShadow: "0 0 0 2px #ddd" }}
             />
             {showTextColor && (
-              <div className="absolute top-10 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
+              <div className="absolute top-8 left-0 z-50 rounded-xl overflow-hidden shadow-2xl">
                 <HexColorPicker
                   color={selectedEl.color}
                   onChange={(c) =>

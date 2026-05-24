@@ -13,22 +13,22 @@ const tools: { icon: React.ReactNode; label: string; value: ActiveTool }[] = [
 ];
 
 export default function Toolbar() {
-  const { activeTool, setActiveTool, activePageSide, addElement } = useJournalStore();
+  const { activeTool, setActiveTool, addElement } = useJournalStore();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const src = ev.target?.result as string;
         const id = nanoid();
-        // store in memory, not localStorage
         imageStore[id] = src;
-        addElement(activePageSide, {
+        // uploads go to left page by default — user can drag to right
+        addElement("left", {
           id,
           type: "image",
-          src: `__img__${id}`,
+          src: id,
           alt: file.name,
           x: 40,
           y: 40,
@@ -60,7 +60,9 @@ export default function Toolbar() {
           style={{
             background: activeTool === tool.value ? "#FFF5E4" : "transparent",
             color: activeTool === tool.value ? "#C9603C" : "#888",
-            border: activeTool === tool.value ? "1.5px solid #f0c8a0" : "1.5px solid transparent",
+            border: activeTool === tool.value
+              ? "1.5px solid #f0c8a0"
+              : "1.5px solid transparent",
           }}
         >
           {tool.icon}
@@ -77,7 +79,15 @@ export default function Toolbar() {
       >
         <Upload size={18} />
       </button>
-      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleUpload}
+      />
     </div>
   );
 }

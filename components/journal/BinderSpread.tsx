@@ -10,6 +10,7 @@ export default function BinderSpread() {
 
   return (
     <div
+      data-spread="true"
       className="relative flex"
       style={{
         maxWidth: 1100,
@@ -18,17 +19,18 @@ export default function BinderSpread() {
         minHeight: 520,
         borderRadius: 12,
         boxShadow: "0 24px 64px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1)",
-        overflow: "visible",
       }}
     >
       {/* Left page */}
       <div
+        data-page="left"
         className="relative h-full"
         style={{
-          flex: 1,
+          width: "calc(50% - 32px)",
           borderRadius: "12px 0 0 12px",
           overflow: "hidden",
-          boxShadow: "inset -4px 0 12px rgba(0,0,0,0.08)",
+          flexShrink: 0,
+          zIndex: 1,
         }}
       >
         <PageCanvas page={spread.left} side="left" />
@@ -37,27 +39,38 @@ export default function BinderSpread() {
       {/* Spine */}
       <div
         style={{
-          width: 60,
+          width: 64,
           flexShrink: 0,
           position: "relative",
           zIndex: 20,
+          pointerEvents: "none",
           background:
-            "linear-gradient(90deg, #caa43a 0%, #fff2a6 50%, #caa43a 100%)",
+            "linear-gradient(90deg, #c8a830 0%, #e8d070 20%, #f5e898 50%, #e8d070 80%, #b89020 100%)",
           boxShadow:
-            "inset 2px 0 8px rgba(255,255,255,0.3), inset -2px 0 8px rgba(0,0,0,0.3)",
+            "inset 2px 0 8px rgba(255,255,255,0.2), inset -2px 0 8px rgba(0,0,0,0.2)",
         }}
       >
+        <div
+          className="absolute inset-y-0"
+          style={{ left: "20%", width: 1, background: "rgba(0,0,0,0.08)" }}
+        />
+        <div
+          className="absolute inset-y-0"
+          style={{ right: "20%", width: 1, background: "rgba(0,0,0,0.08)" }}
+        />
         <BinderRings />
       </div>
 
       {/* Right page */}
       <div
+        data-page="right"
         className="relative h-full"
         style={{
-          flex: 1,
+          width: "calc(50% - 32px)",
           borderRadius: "0 12px 12px 0",
           overflow: "hidden",
-          boxShadow: "inset 4px 0 12px rgba(0,0,0,0.08)",
+          flexShrink: 0,
+          zIndex: 1,
         }}
       >
         <PageCanvas page={spread.right} side="right" />

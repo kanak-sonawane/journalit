@@ -19,51 +19,54 @@ export default function PageCanvas({ page, side }: Props) {
     activeTool,
     selectedElementId,
     selectedElementSide,
-    activePageSide,
     setSelectedElement,
-    setActivePageSide,
     addElement,
   } = useJournalStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const isActive = activePageSide === side;
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Always set this page as active when clicked anywhere on it
-    setActivePageSide(side);
-
-    // Deselect if clicking background (not a child element with data-element)
     const target = e.target as HTMLElement;
     const clickedElement = target.closest("[data-element]");
+
     if (!clickedElement) {
       setSelectedElement(null);
-    }
 
-    // Add text box only if text tool and clicked on bare canvas background
-    if (activeTool === "text" && !clickedElement) {
-      const rect = canvasRef.current!.getBoundingClientRect();
-      const x = e.clientX - rect.left - 100;
-      const y = e.clientY - rect.top - 16;
-      const id = nanoid();
-      addElement(side, {
-        ...DEFAULT_TEXT_ELEMENT,
-        id,
-        type: "text",
-        x: Math.max(4, x),
-        y: Math.max(4, y),
-        content: "",
-      });
-      setTimeout(() => setSelectedElement(id, side), 0);
+      if (activeTool === "text") {
+        const rect = canvasRef.current!.getBoundingClientRect();
+        // coordinates relative to THIS page canvas
+        const x = e.clientX - rect.left - 150;
+        const y = e.clientY - rect.top - 16;
+        const id = nanoid();
+        addElement(side, {
+          ...DEFAULT_TEXT_ELEMENT,
+          id,
+          type: "text",
+          x: Math.max(4, x),
+          y: Math.max(4, y),
+          content: "",
+          width: 300,
+        });
+        setTimeout(() => setSelectedElement(id, side), 0);
+      }
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    setActivePageSide(side);
+    e.stopPropagation(); // prevent bubbling to other page
+
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       f.type.startsWith("image/")
     );
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || files.length === 0) return;
+
+    // Get THIS page canvas bounds specifically
     const rect = canvasRef.current.getBoundingClientRect();
 
     files.forEach((file) => {
@@ -72,13 +75,18 @@ export default function PageCanvas({ page, side }: Props) {
         const src = ev.target?.result as string;
         const id = nanoid();
         imageStore[id] = src;
+
+        // Position relative to this specific canvas
+        const x = e.clientX - rect.left - 90;
+        const y = e.clientY - rect.top - 70;
+
         addElement(side, {
           id,
           type: "image",
           src: id,
           alt: file.name,
-          x: Math.max(0, e.clientX - rect.left - 90),
-          y: Math.max(0, e.clientY - rect.top - 70),
+          x: Math.max(0, Math.min(x, rect.width - 180)),
+          y: Math.max(0, Math.min(y, rect.height - 140)),
           width: 180,
           height: 140,
           rotation: 0,
@@ -94,13 +102,11 @@ export default function PageCanvas({ page, side }: Props) {
       className="relative w-full h-full"
       style={{
         cursor: activeTool === "text" ? "crosshair" : "default",
-        outline: isActive ? "2.5px solid rgba(201,168,76,0.45)" : "none",
-        outlineOffset: "-2px",
         overflow: "hidden",
         borderRadius: side === "left" ? "10px 0 0 10px" : "0 10px 10px 0",
       }}
       onClick={handleClick}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       <PageBackground pageType={page.pageType} bgColor={page.bgColor} />
@@ -112,10 +118,7 @@ export default function PageCanvas({ page, side }: Props) {
             element={el}
             side={side}
             isSelected={selectedElementId === el.id && selectedElementSide === side}
-            onSelect={() => {
-              setSelectedElement(el.id, side);
-              setActivePageSide(side);
-            }}
+            onSelect={() => setSelectedElement(el.id, side)}
           />
         ) : (
           <ImageElementComponent
@@ -123,26 +126,10 @@ export default function PageCanvas({ page, side }: Props) {
             element={el}
             side={side}
             isSelected={selectedElementId === el.id && selectedElementSide === side}
-            onSelect={() => {
-              setSelectedElement(el.id, side);
-              setActivePageSide(side);
-            }}
+            onSelect={() => setSelectedElement(el.id, side)}
           />
         )
       )}
-
-      {/* Page label */}
-      <div
-        className="absolute bottom-2 left-3 pointer-events-none select-none"
-        style={{
-          fontFamily: "var(--font-caveat)",
-          fontSize: 13,
-          color: "#999",
-          opacity: isActive ? 0.5 : 0.15,
-        }}
-      >
-        {side} page {isActive ? "✦" : ""}
-      </div>
 
       {activeTool === "image" &&
         page.elements.filter((e) => e.type === "image").length === 0 && (
